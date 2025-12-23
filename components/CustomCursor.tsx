@@ -1,0 +1,105 @@
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+interface CustomCursorProps {
+  isMenuOpen?: boolean;
+}
+
+const CustomCursor: React.FC<CustomCursorProps> = ({ isMenuOpen = false }) => {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const followerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    const follower = followerRef.current;
+
+    if (!cursor || !follower) return;
+
+    // Change colors based on menu state
+    if (isMenuOpen) {
+      gsap.to(cursor, { backgroundColor: "#0a0a0a", duration: 0.3 });
+      gsap.to(follower, { borderColor: "#0a0a0a", duration: 0.3 });
+    } else {
+      gsap.to(cursor, { backgroundColor: "transparent", duration: 0.3 });
+      gsap.to(follower, { borderColor: "#ccff00", duration: 0.3 });
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    const follower = followerRef.current;
+
+    if (!cursor || !follower) return;
+
+    const moveCursor = (e: MouseEvent) => {
+      gsap.to(cursor, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.1,
+      });
+      gsap.to(follower, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    };
+
+    window.addEventListener("mousemove", moveCursor);
+
+    // Add hover effect for links and buttons
+    const handleHover = () => {
+      gsap.to(cursor, { scale: 0.5, duration: 0.2 });
+      // Keep mix-blend-mode difference for cool inversion effects
+      gsap.to(follower, {
+        scale: 3,
+        opacity: 0.5,
+        backgroundColor: "transparent",
+        mixBlendMode: "difference",
+        duration: 0.2,
+      });
+    };
+
+    const handleUnhover = () => {
+      gsap.to(cursor, { scale: 1, duration: 0.2 });
+      gsap.to(follower, {
+        scale: 1,
+        opacity: 1,
+        backgroundColor: "transparent",
+        mixBlendMode: "normal",
+        duration: 0.2,
+      });
+    };
+
+    const links = document.querySelectorAll("a, button, input, textarea");
+    links.forEach((link) => {
+      link.addEventListener("mouseenter", handleHover);
+      link.addEventListener("mouseleave", handleUnhover);
+    });
+
+    return () => {
+      window.removeEventListener("mousemove", moveCursor);
+      links.forEach((link) => {
+        link.removeEventListener("mouseenter", handleHover);
+        link.removeEventListener("mouseleave", handleUnhover);
+      });
+    };
+  }, []);
+
+  return (
+    <>
+      {/* Main dot */}
+      <div
+        ref={cursorRef}
+        className="fixed top-0 left-0 w-3 h-3 bg-brand-accent rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 hidden md:block"
+      />
+      {/* Follower ring */}
+      <div
+        ref={followerRef}
+        className="fixed top-0 left-0 w-10 h-10 border border-brand-accent rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 hidden md:block"
+      />
+    </>
+  );
+};
+
+export default CustomCursor;
